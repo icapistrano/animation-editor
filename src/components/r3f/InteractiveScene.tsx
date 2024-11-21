@@ -1,40 +1,37 @@
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { observer } from "mobx-react";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Model } from "./Model";
 import { Canvas } from "@react-three/fiber";
 import { cameraConfigStore } from "../../state-management/CameraConfig.store";
 import { CameraHelper } from "./CameraHelper";
-import { Vector3 } from "three";
 
 export const InteractiveScene: FC = observer(() => {
   const { fov, width, height, near, far, cameras, selectedCamera } = cameraConfigStore;
 
+  const [isOrbitControlsEnabled, setIsOrbitControlsEnabled] = useState(true);
+
   return (
     <Canvas>
       {/* Scene control */}
-      <OrbitControls target={[2.5, 0, 2.5]} />
+      <OrbitControls target={[2.5, 0, 2.5]} enabled={isOrbitControlsEnabled} />
 
-      {/* Scene main camera */}
-      {selectedCamera !== undefined ? (
-        <PerspectiveCamera
-          makeDefault
+      {selectedCamera && (
+        <CameraHelper
+          key={"lerp-camera"}
+          fov={fov}
+          aspectRatio={width / height}
+          near={near}
+          far={far}
           position={selectedCamera.position}
-          onUpdate={(self) => {
-            self.lookAt(new Vector3().fromArray(selectedCamera.lookAt));
-          }}
-        ></PerspectiveCamera>
-      ) : (
-        <PerspectiveCamera
-          makeDefault
-          position={[0, 20, 0]}
-          rotation={[(Math.PI / 180) * -90, 0, 0]}
-        ></PerspectiveCamera>
+          lookAt={selectedCamera.lookAt}
+        />
       )}
 
       {/* All camera */}
-      {cameras.map(({ position, lookAt }) => (
+      {cameras.map(({ label, position, lookAt }) => (
         <CameraHelper
+          key={label}
           fov={fov}
           aspectRatio={width / height}
           near={near}

@@ -1,4 +1,4 @@
-import { Box, Sphere } from "@react-three/drei";
+import { Box } from "@react-three/drei";
 import { FC } from "react";
 
 export const Model: FC = () => {
@@ -9,7 +9,7 @@ export const Model: FC = () => {
         <axesHelper scale={10} />
       </Box>
 
-      <Sphere position={[0, 0, 2]} />
+      {/* <Sphere position={[0, 0, 2]} /> */}
     </>
   );
 };
