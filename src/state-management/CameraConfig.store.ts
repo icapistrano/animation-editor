@@ -5,11 +5,11 @@ export interface ISelectedCameraData {
   uuid: string;
   texture: string;
 }
-
-interface CameraMetadata {
+export interface CameraMetadata {
   label: string;
   position: [number, number, number];
   lookAt: [number, number, number];
+  rotation: [number, number, number];
   timestamp: number;
 }
 
@@ -19,7 +19,7 @@ class CameraConfigStore {
   width = 300;
   height = 200;
   near = 1;
-  far = 200;
+  far = 20;
 
   // timeline config
   max = 10000;
@@ -27,44 +27,33 @@ class CameraConfigStore {
   intermediateInterval = 200;
   currentTimestamp = 0;
 
+  // drag controls
+  axis?: "x" | "y" | "z";
+
   v1 = new Vector3();
   v2 = new Vector3();
 
+  selectedCamera?: CameraMetadata;
+
   cameraById = new Map<string, CameraMetadata>([
     [
-      "uuid1",
+      "Close Shot 1",
       {
         label: "Close Shot 1",
-        position: [0, 20, 0],
+        position: [0, 0, 20],
         lookAt: [0, 0, 0],
+        rotation: [0, 0, 0],
         timestamp: 0,
       },
     ],
     [
-      "uuid2",
+      "Close Shot 2",
       {
         label: "Close Shot 2",
-        position: [30, 30, 10],
+        position: [0, 0, 30],
         lookAt: [0, 0, 0],
-        timestamp: 2000,
-      },
-    ],
-    [
-      "uuid3",
-      {
-        label: "Close Shot 3",
-        position: [50, 30, 30],
-        lookAt: [0, 0, 0],
-        timestamp: 50000,
-      },
-    ],
-    [
-      "uuid4",
-      {
-        label: "Close Shot 4",
-        position: [0, 20, 0],
-        lookAt: [0, 0, 0],
-        timestamp: 10000,
+        rotation: [0, 0, 0],
+        timestamp: 1000,
       },
     ],
   ]);
@@ -77,7 +66,7 @@ class CameraConfigStore {
     this.currentTimestamp = timestamp;
   }
 
-  get selectedCamera(): CameraMetadata | null {
+  get selectedCamera1(): CameraMetadata | null {
     const sortedCameras = this.cameras.sort((a, b) => a.timestamp - b.timestamp);
 
     if (this.currentTimestamp === 0) return sortedCameras[0];
@@ -98,12 +87,13 @@ class CameraConfigStore {
       label: "lerp-camera",
       lookAt,
       position,
+      rotation: [0, 0, 0],
       timestamp: this.currentTimestamp,
     };
   }
 
   get cameras() {
-    return Array.from(this.cameraById.values());
+    return Array.from(this.cameraById.values()).sort((a, b) => a.timestamp - b.timestamp);
   }
 
   setFov(fov: number) {
@@ -124,6 +114,33 @@ class CameraConfigStore {
 
   setFar(far: number) {
     this.far = far;
+  }
+
+  setSelectedCamera(camera?: CameraMetadata) {
+    this.selectedCamera = camera;
+  }
+
+  updateCamera(cameraData: Partial<CameraMetadata>) {
+    if (!this.selectedCamera) return;
+
+    this.selectedCamera = {
+      ...this.selectedCamera,
+      ...cameraData,
+    };
+
+    const key = this.selectedCamera.label; // todo: swap with uuid
+    this.cameraById.set(key, this.selectedCamera);
+  }
+
+  deleteCamera() {
+    if (!this.selectedCamera) return;
+
+    this.cameraById.delete(this.selectedCamera.label);
+    this.setSelectedCamera(undefined);
+  }
+
+  lockAxis(axis?: "x" | "y" | "z") {
+    this.axis = axis;
   }
 
   // HELPERS

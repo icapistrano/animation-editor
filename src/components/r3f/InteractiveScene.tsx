@@ -1,48 +1,37 @@
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { observer } from "mobx-react";
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Model } from "./Model";
 import { Canvas } from "@react-three/fiber";
 import { cameraConfigStore } from "../../state-management/CameraConfig.store";
-import { CameraHelper } from "./CameraHelper";
+import { CameraController } from "./CameraController";
 
 export const InteractiveScene: FC = observer(() => {
-  const { fov, width, height, near, far, cameras, selectedCamera } = cameraConfigStore;
-
-  const [isOrbitControlsEnabled, setIsOrbitControlsEnabled] = useState(true);
+  const { fov, width, height, near, far, selectedCamera, updateCamera, axis } = cameraConfigStore;
 
   return (
     <Canvas>
-      {/* Scene control */}
-      <OrbitControls target={[2.5, 0, 2.5]} enabled={isOrbitControlsEnabled} />
+      <scene up={[0, 0, 1]}>
+        <PerspectiveCamera makeDefault position={[80, 80, 0]} up={[0, 0, 1]} />
 
-      {selectedCamera && (
-        <CameraHelper
-          key={"lerp-camera"}
-          fov={fov}
-          aspectRatio={width / height}
-          near={near}
-          far={far}
-          position={selectedCamera.position}
-          lookAt={selectedCamera.lookAt}
-        />
-      )}
+        {/* Scene control */}
+        <OrbitControls makeDefault target={[2.5, 0, 2.5]} maxDistance={500} zoomToCursor />
 
-      {/* All camera */}
-      {cameras.map(({ label, position, lookAt }) => (
-        <CameraHelper
-          key={label}
-          fov={fov}
-          aspectRatio={width / height}
-          near={near}
-          far={far}
-          position={position}
-          lookAt={lookAt ?? [0, 0, 0]}
-        />
-      ))}
+        {selectedCamera && (
+          <CameraController
+            fov={fov}
+            aspectRatio={width / height}
+            near={near}
+            camera={selectedCamera}
+            far={far}
+            updateCamera={updateCamera}
+            lockAxis={axis}
+          />
+        )}
 
-      {/* Model */}
-      <Model />
+        {/* Model */}
+        <Model />
+      </scene>
     </Canvas>
   );
 });
